@@ -71,11 +71,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void _vt_init(void);
   void chVTDoSetI(virtual_timer_t *vtp, sysinterval_t delay,
                   vtfunc_t vtfunc, void *par);
   void chVTDoResetI(virtual_timer_t *vtp);
   void chVTDoTickI(void);
+#if CH_CFG_USE_TIMESTAMP == TRUE
+  systimestamp_t chVTGetTimeStampI(void);
+  void chVTResetTimeStampI(void);
+#endif
 #ifdef __cplusplus
 }
 #endif
@@ -116,7 +119,7 @@ static inline void chVTObjectInit(virtual_timer_t *vtp) {
 static inline systime_t chVTGetSystemTimeX(void) {
 
 #if CH_CFG_ST_TIMEDELTA == 0
-  return ch.vtlist.systime;
+  return currcore->vtlist.systime;
 #else /* CH_CFG_ST_TIMEDELTA > 0 */
   return port_timer_get_time();
 #endif /* CH_CFG_ST_TIMEDELTA > 0 */
@@ -208,19 +211,20 @@ static inline bool chVTIsSystemTimeWithin(systime_t start, systime_t end) {
  * @iclass
  */
 static inline bool chVTGetTimersStateI(sysinterval_t *timep) {
+  virtual_timers_list_t *vtlp = &currcore->vtlist;
 
   chDbgCheckClassI();
 
-  if (&ch.vtlist == (virtual_timers_list_t *)ch.vtlist.next) {
+  if (vtlp == (virtual_timers_list_t *)vtlp->next) {
     return false;
   }
 
   if (timep != NULL) {
 #if CH_CFG_ST_TIMEDELTA == 0
-    *timep = ch.vtlist.next->delta;
+    *timep = vtlp->next->delta;
 #else
-    *timep = (ch.vtlist.next->delta + (sysinterval_t)CH_CFG_ST_TIMEDELTA) -
-             chTimeDiffX(ch.vtlist.lasttime, chVTGetSystemTimeX());
+    *timep = (vtlp->next->delta + (sysinterval_t)CH_CFG_ST_TIMEDELTA) -
+             chTimeDiffX(vtlp->lasttime, chVTGetSystemTimeX());
 #endif
   }
 
@@ -355,6 +359,74 @@ static inline void chVTSet(virtual_timer_t *vtp, sysinterval_t delay,
   chSysLock();
   chVTSetI(vtp, delay, vtfunc, par);
   chSysUnlock();
+}
+
+#if (CH_CFG_USE_TIMESTAMP == TRUE) || defined(__DOXYGEN__)
+/**
+ * @brief   Generates a monotonic time stamp.
+ * @details This function generates a monotonic time stamp synchronized with
+ *          the system time. The time stamp has the same resolution of
+ *          system time.
+ * @note    There is an assumption, this function must be called at
+ *          least once before the system time wraps back to zero or
+ *          synchronization is lost. You may use a periodic virtual timer with
+ *          a very large interval in order to keep time stamps synchronized
+ *          by calling this function.
+ *
+ * @return              The time stamp.
+ *
+ * @api
+ */
+static inline systimestamp_t chVTGetTimeStamp(void) {
+  systimestamp_t stamp;
+
+  chSysLock();
+
+  stamp = chVTGetTimeStampI();
+
+  chSysUnlock();
+
+  return stamp;
+}
+
+/**
+ * @brief   Resets and re-synchronizes the time stamps monotonic counter.
+ *
+ * @api
+ */
+static inline void chVTResetTimeStamp(void) {
+
+  chDbgCheckClassI();
+
+  chSysLock();
+
+  chVTResetTimeStampI();
+
+  chSysUnlock();
+}
+#endif /* CH_CFG_USE_TIMESTAMP == TRUE */
+
+/**
+ * @brief   Virtual Timers instance initialization.
+ * @note    Internal use only.
+ *
+ * @param[out] sdp      pointer to the @p system_debug_t structure
+ *
+ * @notapi
+ */
+static inline void __vt_object_init(virtual_timers_list_t *vtlp) {
+
+  vtlp->next  = (virtual_timer_t *)vtlp;
+  vtlp->prev  = (virtual_timer_t *)vtlp;
+  vtlp->delta = (sysinterval_t)-1;
+#if CH_CFG_ST_TIMEDELTA == 0
+  vtlp->systime = (systime_t)0;
+#else /* CH_CFG_ST_TIMEDELTA > 0 */
+  vtlp->lasttime = (systime_t)0;
+#endif /* CH_CFG_ST_TIMEDELTA > 0 */
+#if CH_CFG_USE_TIMESTAMP == TRUE
+  ch.vtlist.laststamp = (systimestamp_t)chVTGetSystemTimeX();
+#endif
 }
 
 #endif /* CHVT_H */

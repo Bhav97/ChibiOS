@@ -46,6 +46,21 @@
 #define CH_CUSTOMER_ID_CODE                 "xxxx-yyyy"
 
 /**
+ * @brief   End-Of-Support date (yyyymm).
+ */
+#define CH_CUSTOMER_LICENSE_EOS_DATE        209912
+
+/**
+ * @brief   Licensed branch year.
+ */
+#define CH_CUSTOMER_LICENSE_VERSION_YEAR    99
+
+/**
+ * @brief   Licensed branch month.
+ */
+#define CH_CUSTOMER_LICENSE_VERSION_MONTH   12
+
+/**
  * @brief   Current license.
  * @note    This setting is reserved to the copyright owner.
  * @note    Changing this setting invalidates the license.
@@ -82,6 +97,13 @@
 /*===========================================================================*/
 /* Derived constants and error checks.                                       */
 /*===========================================================================*/
+
+/**
+ * @brief   Licensed version date in numeric form (yyyymm).
+ */
+#define CH_CUSTOMER_LICENSE_VERSION_DATE                                    \
+  (((CH_CUSTOMER_LICENSE_VERSION_YEAR + 2000) * 100) +                      \
+   CH_CUSTOMER_LICENSE_VERSION_MONTH)
 
 /*===========================================================================*/
 /* Module data structures and types.                                         */

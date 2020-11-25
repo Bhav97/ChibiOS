@@ -91,7 +91,7 @@
 /**
  * @brief   Delta list compression.
  *
- * @param[in] vtpl      pointer to the delta list to be compressed
+ * @param[in] vtlp      pointer to the delta list to be compressed
  * @param[in] deltanow  interval to be compacted starting from "lasttime"
  *
  * @notapi
@@ -122,24 +122,6 @@ static void vt_list_compress(virtual_timers_list_t *vtlp,
 /*===========================================================================*/
 
 /**
- * @brief   Virtual Timers initialization.
- * @note    Internal use only.
- *
- * @notapi
- */
-void _vt_init(void) {
-
-  ch.vtlist.next = (virtual_timer_t *)&ch.vtlist;
-  ch.vtlist.prev = (virtual_timer_t *)&ch.vtlist;
-  ch.vtlist.delta = (sysinterval_t)-1;
-#if CH_CFG_ST_TIMEDELTA == 0
-  ch.vtlist.systime = (systime_t)0;
-#else /* CH_CFG_ST_TIMEDELTA > 0 */
-  ch.vtlist.lasttime = (systime_t)0;
-#endif /* CH_CFG_ST_TIMEDELTA > 0 */
-}
-
-/**
  * @brief   Enables a virtual timer.
  * @details The timer is enabled and programmed to trigger after the delay
  *          specified as parameter.
@@ -163,7 +145,7 @@ void _vt_init(void) {
  */
 void chVTDoSetI(virtual_timer_t *vtp, sysinterval_t delay,
                 vtfunc_t vtfunc, void *par) {
-  virtual_timers_list_t *vtlp = &ch.vtlist;
+  virtual_timers_list_t *vtlp = &currcore->vtlist;
   virtual_timer_t *p;
   sysinterval_t delta;
 
@@ -275,7 +257,7 @@ void chVTDoSetI(virtual_timer_t *vtp, sysinterval_t delay,
  * @iclass
  */
 void chVTDoResetI(virtual_timer_t *vtp) {
-  virtual_timers_list_t *vtlp = &ch.vtlist;
+  virtual_timers_list_t *vtlp = &currcore->vtlist;
 
   chDbgCheckClassI();
   chDbgCheck(vtp != NULL);
@@ -373,7 +355,7 @@ void chVTDoResetI(virtual_timer_t *vtp) {
  * @iclass
  */
 void chVTDoTickI(void) {
-  virtual_timers_list_t *vtlp = &ch.vtlist;
+  virtual_timers_list_t *vtlp = &currcore->vtlist;
 
   chDbgCheckClassI();
 
@@ -427,6 +409,8 @@ void chVTDoTickI(void) {
       vtp->next->prev = (virtual_timer_t *)vtlp;
       vtlp->next = vtp->next;
       fn = vtp->func;
+
+      /* Marking the timer as non active.*/
       vtp->func = NULL;
 
       /* If the list becomes empty then the timer is stopped.*/
@@ -473,5 +457,60 @@ void chVTDoTickI(void) {
               "exceeding delta");
 #endif /* CH_CFG_ST_TIMEDELTA > 0 */
 }
+
+#if (CH_CFG_USE_TIMESTAMP == TRUE) || defined(__DOXYGEN__)
+/**
+ * @brief   Generates a monotonic time stamp.
+ * @details This function generates a monotonic time stamp synchronized with
+ *          the system time. The time stamp has the same resolution of
+ *          system time.
+ * @note    There is an assumption, this function must be called at
+ *          least once before the system time wraps back to zero or
+ *          synchronization is lost. You may use a periodic virtual timer with
+ *          a very large interval in order to keep time stamps synchronized
+ *          by calling this function.
+ *
+ * @return              The time stamp.
+ *
+ * @iclass
+ */
+systimestamp_t chVTGetTimeStampI(void) {
+  systimestamp_t last, stamp;
+  systime_t now;
+
+  chDbgCheckClassI();
+
+  /* Current system time.*/
+  now = chVTGetSystemTimeX();
+
+  /* Last time stamp generated.*/
+  last = ch.vtlist.laststamp;
+
+  /* Interval between the last time stamp and current time used for a new
+     time stamp. Note that this fails if the interval is larger than a
+     systime_t type.*/
+  stamp = last + (systimestamp_t)chTimeDiffX((sysinterval_t)last, now);
+
+  chDbgAssert(ch.vtlist.laststamp <= stamp, "wrapped");
+
+  /* Storing the new stamp.*/
+  ch.vtlist.laststamp = stamp;
+
+  return stamp;
+}
+
+/**
+ * @brief   Resets and re-synchronizes the time stamps monotonic counter.
+ *
+ * @iclass
+ */
+void chVTResetTimeStampI(void) {
+
+  chDbgCheckClassI();
+
+  ch.vtlist.laststamp = (systimestamp_t)chVTGetSystemTimeX();
+}
+
+#endif /* CH_CFG_USE_TIMESTAMP == TRUE */
 
 /** @} */

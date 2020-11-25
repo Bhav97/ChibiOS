@@ -1,4 +1,4 @@
-# List of the ChibiOS/RT ARMv8-M mainline generic port files.
+# List of the ChibiOS ARMv8M-MainLine generic port files.
 PORTSRC = $(CHIBIOS)/os/common/ports/ARMv8-M-ML/chcore.c
           
 PORTASM = $(CHIBIOS)/os/common/ports/ARMv8-M-ML/compilers/GCC/chcoreasm.S

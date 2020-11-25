@@ -74,6 +74,34 @@
 *****************************************************************************
 
 *** Next ***
+- NEW: Added chscanf() and buffered streams, contributed by Alex Lewontin.
+- NEW: Added option to LWIP bindings to use memory pools instead of heap
+       allocator.
+- NEW: Added MACv2 driver for STM32H7xx.
+- NEW: Added support for UART9 and UART10 in STM32 USARTv1 drivers.
+- NEW: Added board support for ST_STM32G474RE_DISCOVERY_DPOW1, added demo.
+- NEW: Improved the STM32G4xx clock initialization to use the shared
+       mini-drivers in STM32/LLD/RCCv1, code is greatly simplified.
+- NEW: Updated STM32F4xx platform with new IRQ handling, enabled the missing
+       timers.
+- NEW: Added mcuconf.h updater for STM32F401, STM32F410, STM32F411, STM32F412,
+       F427, F429, F437, F439, F446, F469, F479.
+- NEW: SIO STM32 implementation for USARTs without FIFO in STM32/LLD/USARTv2,
+       implementation with FIFO in STM32/LLD/USARTv3.
+- NEW: Updated SIO driver model to support more use cases.
+- NEW: Simplified USART units use collision detection in STM32 HAL, now it is
+       done like for TIM units for consistency.
+- NEW: Identification macros such as__CHIBIOS_RT__ are now prefixed by
+       two underscores.
+- NEW: Support for 3 analog watchdogs in ADCv3 (STM32F3, L4, L4+, G4).
+- NEW: Support for 3 analog watchdogs in ADCv5 (STM32G0).
+- NEW: Stand-alone ARMv8-M-ML-TZ port.
+- NEW: Stand-alone ARMv8-M-ML port.
+- NEW: Stand-alone ARMv7-M port.
+- NEW: Stand-alone ARMv6-M port.
+- NEW: Merged RT7.
+- NEW: New API in RT for high resolution monotonic time stamps.
+- NEW: Updated FatFS to version 0.14.
 - NEW: Added a new setting to STM32 USBv1 allowing for some clock deviation
        from 48MHz. Renamed setting USB_HOST_WAKEUP_DURATION to
        STM32_USB_HOST_WAKEUP_DURATION for consistency.
@@ -95,6 +123,47 @@
        MEMS Accelerometers.
 - NEW: Safer messages mechanism for sandboxes (to be backported to 20.3.1).
 - NEW: Added latency measurement test application.
+- FIX: Fixed moved define into hal_wspi_lld.c (bug #1133)
+       (backported to 20.3.3).
+- FIX: Fixed various bugs in MDMAv1 driver (bug #1132)
+       (backported to 20.3.3).
+- FIX: Fixed wrong check on LSI on all STM32 platforms (bug #1131)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed OSAL does not allow 64 bits resolution values (bug #1128)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed wrong SDMMC RCC macros for STM32H7xx (bug #1127)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed STM32 ADCv3 hangin on initialization (bug #1126)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed I2S-related problems in STM32F4xx registry (bug #1124)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed STM32 EXTIv1 driver unable to enable/disable fixed lines
+       (bug #1123)(backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed incorrect STM32 iWDG initialization in windowed mode (bug #1122)
+       (backported to 20.3.3)(backported to 19.1.5).
+- FIX: Fixed ignored HSIDIV setting on STM32G0xx (bug #1121)
+       (backported to 20.3.3).
+- FIX: Fixed incorrect variable name in recursive mutex handling (bug #1119).
+- FIX: Fixed several problems in STM32 ADCv4 (bug #1116)
+       (backported to 20.3.2).
+- FIX: Fixed STM32 QSPI errata workaround (bug #1117)
+       (backported to 20.3.2).
+- FIX: Fixed wrong condition in STM32 BDMAv1 driver (bug #1115)
+       (backported to 20.3.2).
+- FIX: Fixed HSI48 not getting enabled on STM32H7 (bug #1114)
+       (backported to 20.3.2).
+- FIX: Fixed LPUART1 support for STM32H7xx (bug #1113)
+       (backported to 20.3.2).
+- FIX: Fixed wrong sector count in EFL driver for L4+ dual bank configuration 
+       (bug #1112)(backported to 20.3.2).
+- FIX: Fixed wrong preprocessor checks in STM32 TIMv1 ICU driver (bug #1111)
+       (backported to 20.3.2)(backported to 19.1.5).
+- FIX: Fixed wrong revisions handling in STM32H743 HAL (bug #1110)
+       (backported to 20.3.2)(backported to 19.1.5).
+- FIX: Fixed missing STM32_I2C_BDMA_REQUIRED definition in I2Cv3 driver
+       (bug #1109)(backported to 20.3.2)(backported to 19.1.5).
+- FIX: Fixed wrong definitions in SPC563M board files (bug #1108)
+       (backported to 20.3.2)(backported to 19.1.5).
 - FIX: Fixed cortex-M vectors table alignment problem (bug #1107)
        (backported to 20.3.2)(backported to 19.1.5).
 - FIX: Fixed extra condition in MAC driver macWaitTransmitDescriptor() function
@@ -157,4 +226,3 @@
        (backported to 20.3.1).
 - FIX: Fixed problem in chMtxUnlockAllS() (bug #1076).
        (backported to 20.3.1)(backported to 19.1.4)(backported to 18.2.3).
-    
